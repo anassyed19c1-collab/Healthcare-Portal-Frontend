@@ -1,7 +1,8 @@
-'use client'
+"use client";
 
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
+import { useAuth } from "@/hooks/useAuth";
 import { LayoutGrid, CalendarClock, ClipboardList, Users, User } from "lucide-react";
 
 const navItems = [
@@ -17,11 +18,19 @@ export default function ProviderLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = { name: "Dr. Anita Rao", role: "Cardiology" };
+  const { user, loading } = useAuth("PROVIDER");
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <TopBar name={user.name} role={user.role} />
+      <TopBar name={user.name} role={user.specialization || "Provider"} />
       <div className="flex">
         <Sidebar navItems={navItems} />
         <main className="flex-1 p-8">{children}</main>

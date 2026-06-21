@@ -2,8 +2,23 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiFetch, ApiError } from "@/lib/api";
+import { saveToken, decodeToken, roleToDashboard } from "@/lib/auth";
+
+interface RegisterResponse {
+  message: string;
+  token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: "PATIENT" | "PROVIDER" | "ADMIN";
+  };
+}
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -35,10 +50,30 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      // API call backend se wire karenge agle step mein
-      console.log("Register attempt:", form);
+      const data = await apiFetch<RegisterResponse>("/auth/register", {
+        method: "POST",
+        body: {
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          phone: form.phone || undefined,
+          dateOfBirth: form.dateOfBirth || undefined,
+        },
+      });
+
+      saveToken(data.token);
+      const payload = decodeToken(data.token);
+      if (payload) {
+        router.push(roleToDashboard(payload.role));
+      } else {
+        router.push("/login");
+      }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

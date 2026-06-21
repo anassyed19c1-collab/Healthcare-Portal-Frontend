@@ -2,8 +2,23 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiFetch, ApiError } from "@/lib/api";
+import { saveToken, decodeToken, roleToDashboard } from "@/lib/auth";
+
+interface LoginResponse {
+  message: string;
+  token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: "PATIENT" | "PROVIDER" | "ADMIN";
+  };
+}
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,10 +30,25 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // API call backend se wire karenge agle step mein
-      console.log("Login attempt:", { email, password });
+      const data = await apiFetch<LoginResponse>("/auth/login", {
+        method: "POST",
+        body: { email, password },
+      });
+
+      saveToken(data.token);
+
+      const payload = decodeToken(data.token);
+      if (payload) {
+        router.push(roleToDashboard(payload.role));
+      } else {
+        router.push("/login");
+      }
     } catch (err) {
-      setError("Invalid email or password");
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

@@ -1,11 +1,16 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { removeToken } from "@/lib/auth";
+
 interface TopBarProps {
   name: string;
   role: string;
 }
 
 export default function TopBar({ name, role }: TopBarProps) {
+  const router = useRouter();
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -14,8 +19,8 @@ export default function TopBar({ name, role }: TopBarProps) {
     .toUpperCase();
 
   const handleLogout = () => {
-    // backend se wire karte waqt yahan token clear + redirect karenge
-    console.log("logging out");
+    removeToken();
+    router.push("/login");
   };
 
   return (
