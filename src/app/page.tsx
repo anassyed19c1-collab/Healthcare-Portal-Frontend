@@ -1,65 +1,97 @@
-import Image from "next/image";
+import Link from "next/link";
+import { HeartPulse, CalendarCheck, ShieldCheck } from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top bar */}
+      <header className="flex items-center justify-between px-8 py-5">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white font-bold">
+            +
+          </div>
+          <span className="font-bold text-foreground text-lg">Patient Portal</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="text-foreground font-semibold text-sm px-4 py-2 hover:text-primary"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Log In
+          </Link>
+          <Link
+            href="/register"
+            className="bg-primary hover:bg-primary-dark text-white font-semibold text-sm px-5 py-2.5 rounded-lg"
           >
-            Documentation
-          </a>
+            Get Started
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
+        <div className="w-16 h-16 rounded-2xl bg-card border border-primary/20 flex items-center justify-center mb-6">
+          <span className="text-primary text-xs font-semibold tracking-wide">LOGO</span>
+        </div>
+
+        <h1 className="text-4xl font-bold text-foreground max-w-2xl mb-4">
+          Healthcare made simple for patients and providers
+        </h1>
+        <p className="text-muted max-w-xl mb-8">
+          Book appointments, manage your schedule, and stay connected with your
+          care team — all in one secure portal.
+        </p>
+
+        <div className="flex items-center gap-4 mb-16">
+          <Link
+            href="/register"
+            className="bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-lg"
+          >
+            Create an Account
+          </Link>
+          <Link
+            href="/login"
+            className="border border-gray-300 text-foreground font-semibold px-6 py-3 rounded-lg hover:bg-gray-50"
+          >
+            Log In
+          </Link>
+        </div>
+
+        {/* Feature highlights */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl w-full">
+          <div className="bg-card rounded-2xl shadow-sm p-6 text-left">
+            <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center mb-3">
+              <CalendarCheck size={20} />
+            </div>
+            <h3 className="font-bold text-foreground mb-1">Easy Booking</h3>
+            <p className="text-sm text-muted">
+              Schedule appointments with your preferred provider in a few clicks.
+            </p>
+          </div>
+          <div className="bg-card rounded-2xl shadow-sm p-6 text-left">
+            <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center mb-3">
+              <HeartPulse size={20} />
+            </div>
+            <h3 className="font-bold text-foreground mb-1">Track Your Care</h3>
+            <p className="text-sm text-muted">
+              View your appointment history and upcoming visits anytime.
+            </p>
+          </div>
+          <div className="bg-card rounded-2xl shadow-sm p-6 text-left">
+            <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center mb-3">
+              <ShieldCheck size={20} />
+            </div>
+            <h3 className="font-bold text-foreground mb-1">Secure & Private</h3>
+            <p className="text-sm text-muted">
+              Your health information is protected with industry-standard security.
+            </p>
+          </div>
         </div>
       </main>
+
+      <footer className="text-center text-sm text-muted py-6">
+        Are you a healthcare provider? Contact your administrator to get access.
+      </footer>
     </div>
   );
 }
