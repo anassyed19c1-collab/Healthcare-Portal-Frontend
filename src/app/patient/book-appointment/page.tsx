@@ -101,6 +101,8 @@ export default function BookAppointmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [bookingDone, setBookingDone] = useState(false);
 
+  const [bookedSlots, setBookedSlots] = useState<{ startTime: string; endTime: string }[]>([]);
+
   useEffect(() => {
     const token = getToken();
     if (!token) return;
@@ -116,6 +118,22 @@ export default function BookAppointmentPage() {
         setLoadingProviders(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (!selectedProvider || !selectedDay) return;
+    const token = getToken();
+    if (!token) return;
+
+    const dateStr = `${viewYear}-${(viewMonth + 1).toString().padStart(2, "0")}-${selectedDay.toString().padStart(2, "0")}`;
+
+    apiFetch<{ bookedSlots: { startTime: string; endTime: string }[] }>(
+      `/providers/${selectedProvider.id}/booked-slots?date=${dateStr}`,
+      { token }
+    )
+      .then((data) => setBookedSlots(data.bookedSlots || []))
+      .catch(() => setBookedSlots([]));
+  }, [selectedProvider, selectedDay, viewYear, viewMonth]);
+
 
   const handleSelectProvider = (p: Provider) => {
     setSelectedProvider(p);
@@ -145,6 +163,13 @@ export default function BookAppointmentPage() {
         )
       )
       : [];
+
+  const isSlotBooked = (slot: { startMinutes: number; endMinutes: number }) => {
+    return bookedSlots.some((booked) => {
+      const bookedStart = timeToMinutes(booked.startTime);
+      return bookedStart === slot.startMinutes;
+    });
+  };
 
   const handleConfirmBooking = async () => {
     if (!selectedProvider || !selectedDay || !selectedSlot) return;
@@ -195,7 +220,7 @@ export default function BookAppointmentPage() {
           className="bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-lg inline-block"
         >
           View My Appointments
-        </Link> 
+        </Link>
       </div>
     );
   }
@@ -331,18 +356,24 @@ export default function BookAppointmentPage() {
                 <p className="text-sm text-muted">No slots available this day.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  {slotsForSelectedDay.map((slot) => (
-                    <button
-                      key={slot.startMinutes}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`py-2.5 rounded-lg text-sm font-medium border ${selectedSlot?.startMinutes === slot.startMinutes
-                        ? "bg-primary text-white border-primary"
-                        : "border-gray-300 text-foreground hover:border-primary"
-                        }`}
-                    >
-                      {slot.label}
-                    </button>
-                  ))}
+                  {slotsForSelectedDay.map((slot) => {
+                    const booked = isSlotBooked(slot);
+                    return (
+                      <button
+                        key={slot.startMinutes}
+                        onClick={() => !booked && setSelectedSlot(slot)}
+                        disabled={booked}
+                        className={`py-2.5 rounded-lg text-sm font-medium border ${booked
+                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : selectedSlot?.startMinutes === slot.startMinutes
+                              ? "bg-primary text-white border-primary"
+                              : "border-gray-300 text-foreground hover:border-primary"
+                          }`}
+                      >
+                        {slot.label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
