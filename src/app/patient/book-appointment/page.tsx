@@ -128,20 +128,21 @@ export default function BookAppointmentPage() {
   const isDayAvailable = (day: number) => {
     if (!selectedProvider) return false;
     const date = new Date(viewYear, viewMonth, day);
+    date.setHours(0, 0, 0, 0);
     const weekday = date.getDay();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (date < today) return false;
+    if (date <= today) return false; // aaj aur past dono disable
     return selectedProvider.availability.some((a) => a.dayOfWeek === weekday);
   };
 
   const slotsForSelectedDay =
     selectedProvider && selectedDay
       ? generateSlots(
-          selectedProvider.availability.filter(
-            (a) => a.dayOfWeek === new Date(viewYear, viewMonth, selectedDay).getDay()
-          )
+        selectedProvider.availability.filter(
+          (a) => a.dayOfWeek === new Date(viewYear, viewMonth, selectedDay).getDay()
         )
+      )
       : [];
 
   const handleConfirmBooking = async () => {
@@ -307,13 +308,12 @@ export default function BookAppointmentPage() {
                         setSelectedDay(day);
                         setSelectedSlot(null);
                       }}
-                      className={`h-10 rounded-lg text-sm font-medium border ${
-                        isSelected
+                      className={`h-10 rounded-lg text-sm font-medium border ${isSelected
                           ? "bg-primary text-white border-primary"
                           : available
-                          ? "border-gray-300 text-foreground hover:border-primary"
-                          : "border-transparent text-gray-300 cursor-not-allowed"
-                      }`}
+                            ? "border-gray-300 text-foreground hover:border-primary"
+                            : "border-transparent text-gray-300 cursor-not-allowed"
+                        }`}
                     >
                       {day}
                     </button>
@@ -334,11 +334,10 @@ export default function BookAppointmentPage() {
                     <button
                       key={slot.startMinutes}
                       onClick={() => setSelectedSlot(slot)}
-                      className={`py-2.5 rounded-lg text-sm font-medium border ${
-                        selectedSlot?.startMinutes === slot.startMinutes
+                      className={`py-2.5 rounded-lg text-sm font-medium border ${selectedSlot?.startMinutes === slot.startMinutes
                           ? "bg-primary text-white border-primary"
                           : "border-gray-300 text-foreground hover:border-primary"
-                      }`}
+                        }`}
                     >
                       {slot.label}
                     </button>

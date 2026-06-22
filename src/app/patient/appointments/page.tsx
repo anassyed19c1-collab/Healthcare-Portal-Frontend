@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import StatusBadge from "@/components/StatusBadge";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
 type ApptStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
@@ -79,6 +79,54 @@ export default function MyAppointmentsPage() {
   const start = (page - 1) * PAGE_SIZE;
   const pageItems = appointments.slice(start, start + PAGE_SIZE);
 
+  const handleCancel = async (id: number) => {
+    const token = getToken();
+    try {
+      await apiFetch(`/patient/appointments/${id}/cancel`, {
+        method: "PUT",
+        token: token || undefined,
+      });
+      setAppointments((prev) =>
+        prev.map((a) => a.id === id ? { ...a, status: "CANCELLED" } : a)
+      );
+    } catch (err) {
+      console.error("Cancel failed:", err);
+    }
+  };
+
+  const handleReschedule = async (id: number) => {
+    // Simple prompt se nai date/time lenge abhi
+    const newDate = prompt("New date (YYYY-MM-DD):");
+    const newStartTime = prompt("New start time (HH:MM):");
+    const newEndTime = prompt("New end time (HH:MM):");
+
+    if (!newDate || !newStartTime || !newEndTime) return;
+
+    const token = getToken();
+    try {
+      await apiFetch(`/patient/appointments/${id}/reschedule`, {
+        method: "PUT",
+        token: token || undefined,
+        body: {
+          date: newDate,
+          startTime: newStartTime,
+          endTime: newEndTime,
+        },
+      });
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? { ...a, date: newDate, startTime: newStartTime, endTime: newEndTime, status: "PENDING" }
+            : a
+        )
+      );
+    } catch (err) {
+      if (err instanceof ApiError) {
+        alert(err.message);
+      }
+    }
+  };
+
   return (
     <div>
       <div className="flex items-start justify-between mb-2">
@@ -130,10 +178,16 @@ export default function MyAppointmentsPage() {
                     <div className="flex items-center gap-5 pl-2">
                       {displayStatus === "UPCOMING" && (
                         <>
-                          <button className="text-primary font-semibold text-sm hover:underline whitespace-nowrap">
+                          <button
+                            onClick={() => handleReschedule(appt.id)}
+                            className="text-primary font-semibold text-sm hover:underline whitespace-nowrap"
+                          >
                             Reschedule
                           </button>
-                          <button className="text-red-600 font-semibold text-sm hover:underline whitespace-nowrap">
+                          <button
+                            onClick={() => handleCancel(appt.id)}
+                            className="text-red-600 font-semibold text-sm hover:underline whitespace-nowrap"
+                          >
                             Cancel
                           </button>
                         </>
@@ -165,9 +219,8 @@ export default function MyAppointmentsPage() {
                 <button
                   key={p}
                   onClick={() => setPage(p)}
-                  className={`w-9 h-9 rounded-lg text-sm font-semibold ${
-                    p === page ? "bg-primary text-white" : "border border-gray-300 text-foreground hover:bg-gray-50"
-                  }`}
+                  className={`w-9 h-9 rounded-lg text-sm font-semibold ${p === page ? "bg-primary text-white" : "border border-gray-300 text-foreground hover:bg-gray-50"
+                    }`}
                 >
                   {p}
                 </button>
