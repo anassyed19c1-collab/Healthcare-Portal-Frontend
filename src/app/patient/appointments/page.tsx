@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import StatusBadge from "@/components/StatusBadge";
 import { ApiError, apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import Link from "next/link";
 
 type ApptStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 type DisplayStatus = "UPCOMING" | "COMPLETED" | "CANCELLED";
@@ -134,12 +135,12 @@ export default function MyAppointmentsPage() {
           <h1 className="text-2xl font-bold text-foreground">My Appointments</h1>
           <p className="text-muted mt-1">{appointments.length} appointments</p>
         </div>
-        <a
+        <Link
           href="/patient/book-appointment"
           className="bg-primary hover:bg-primary-dark text-white font-semibold px-5 py-2.5 rounded-lg"
         >
           + Book New Appointment
-        </a>
+        </Link>
       </div>
 
       {error && <p className="text-red-600 my-4">{error}</p>}

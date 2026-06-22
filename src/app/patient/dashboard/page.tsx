@@ -5,6 +5,8 @@ import AppointmentCard from "@/components/AppointmentCard";
 import StatusBadge from "@/components/StatusBadge";
 import { apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import Link from "next/link";
+
 
 type ApptStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 
@@ -72,12 +74,12 @@ export default function PatientDashboard() {
             Welcome back! Here&apos;s what&apos;s coming up.
           </p>
         </div>
-        <a
+        <Link
           href="/patient/book-appointment"
           className="bg-primary hover:bg-primary-dark text-white font-semibold px-5 py-2.5 rounded-lg"
         >
           + Book New Appointment
-        </a>
+        </Link>
       </div>
 
       {

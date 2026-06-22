@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Stepper from "@/components/Stepper";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import Link from "next/link";
 
 interface AvailabilityEntry {
   dayOfWeek: number | null;
@@ -189,12 +190,12 @@ export default function BookAppointmentPage() {
           {`Your appointment with ${selectedProvider?.name} has been requested.`}
           You&apos;ll be notified once it&apos;s confirmed.
         </p>
-        <a
+        <Link
           href="/patient/appointments"
           className="bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-lg inline-block"
         >
           View My Appointments
-        </a>
+        </Link> 
       </div>
     );
   }
@@ -309,10 +310,10 @@ export default function BookAppointmentPage() {
                         setSelectedSlot(null);
                       }}
                       className={`h-10 rounded-lg text-sm font-medium border ${isSelected
-                          ? "bg-primary text-white border-primary"
-                          : available
-                            ? "border-gray-300 text-foreground hover:border-primary"
-                            : "border-transparent text-gray-300 cursor-not-allowed"
+                        ? "bg-primary text-white border-primary"
+                        : available
+                          ? "border-gray-300 text-foreground hover:border-primary"
+                          : "border-transparent text-gray-300 cursor-not-allowed"
                         }`}
                     >
                       {day}
@@ -335,8 +336,8 @@ export default function BookAppointmentPage() {
                       key={slot.startMinutes}
                       onClick={() => setSelectedSlot(slot)}
                       className={`py-2.5 rounded-lg text-sm font-medium border ${selectedSlot?.startMinutes === slot.startMinutes
-                          ? "bg-primary text-white border-primary"
-                          : "border-gray-300 text-foreground hover:border-primary"
+                        ? "bg-primary text-white border-primary"
+                        : "border-gray-300 text-foreground hover:border-primary"
                         }`}
                     >
                       {slot.label}
