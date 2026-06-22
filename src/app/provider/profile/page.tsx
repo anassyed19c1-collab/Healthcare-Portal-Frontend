@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Toggle from "@/components/Toggle";
+import { apiFetch, ApiError } from "@/lib/api";
+import { getToken } from "@/lib/auth";
+
+interface ApiUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  specialization: string | null;
+}
 
 export default function ProviderProfilePage() {
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
   const [profile, setProfile] = useState({
-    name: "Dr. Anita Rao",
-    email: "anita.rao@clinic.example.com",
-    phone: "(555) 612-7788",
-    specialization: "Cardiology",
-    licenseNumber: "MD-7741920",
-    licenseState: "OR",
+    name: "",
+    email: "",
+    phone: "",
+    specialization: "",
   });
 
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   const [notifications, setNotifications] = useState({
     newAppointment: true,
@@ -22,38 +38,114 @@ export default function ProviderProfilePage() {
     dailySummary: false,
   });
 
-  const handleSaveProfile = () => {
-    // backend se wire karte waqt: PUT /api/users/me
-    console.log("Saving provider profile:", profile);
-    setIsEditing(false);
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    apiFetch<{ user: ApiUser }>("/users/me", { token })
+      .then(({ user }) => {
+        setProfile({
+          name: user.name,
+          email: user.email,
+          phone: user.phone || "",
+          specialization: user.specialization || "",
+        });
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load profile:", err);
+        setLoadError("Could not load your profile.");
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSaveProfile = async () => {
+    setSaveError("");
+    setSaving(true);
+    try {
+      const token = getToken();
+      await apiFetch("/users/me", {
+        method: "PUT",
+        token: token || undefined,
+        body: {
+          name: profile.name,
+          phone: profile.phone || undefined,
+          specialization: profile.specialization || undefined,
+        },
+      });
+      setIsEditing(false);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setSaveError(err.message);
+      } else {
+        setSaveError("Could not save changes. Please try again.");
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
+    setPasswordError("");
+    setPasswordSuccess("");
+
     if (passwords.new !== passwords.confirm) {
-      alert("New passwords do not match");
+      setPasswordError("New passwords do not match");
       return;
     }
-    // backend se wire karte waqt: PUT /api/users/me (currentPassword + newPassword)
-    console.log("Updating password");
-    setPasswords({ current: "", new: "", confirm: "" });
+    if (!passwords.current || !passwords.new) {
+      setPasswordError("Please fill in all password fields");
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const token = getToken();
+      await apiFetch("/users/me", {
+        method: "PUT",
+        token: token || undefined,
+        body: {
+          currentPassword: passwords.current,
+          newPassword: passwords.new,
+        },
+      });
+      setPasswordSuccess("Password updated successfully.");
+      setPasswords({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setPasswordError(err.message);
+      } else {
+        setPasswordError("Could not update password. Please try again.");
+      }
+    } finally {
+      setUpdatingPassword(false);
+    }
   };
+
+  const initials = profile.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  if (loading) return <p className="text-muted">Loading profile...</p>;
 
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold text-foreground mb-6">Profile</h1>
 
+      {loadError && <p className="text-red-600 mb-4">{loadError}</p>}
+
       {/* Header card */}
       <div className="bg-card rounded-2xl shadow-sm p-6 flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xl">
-            AR
+            {initials}
           </div>
           <div>
             <p className="text-xl font-bold text-foreground">{profile.name}</p>
-            <p className="text-sm text-muted">{profile.specialization}</p>
-            <p className="text-sm text-muted">
-              License · {profile.licenseNumber} · {profile.licenseState}
-            </p>
+            <p className="text-sm text-muted">{profile.specialization || "Provider"}</p>
           </div>
         </div>
         <button
@@ -68,6 +160,8 @@ export default function ProviderProfilePage() {
       <div className="bg-card rounded-2xl shadow-sm p-6 mb-6">
         <h2 className="font-bold text-foreground mb-5">Professional Information</h2>
 
+        {saveError && <p className="text-red-600 mb-4">{saveError}</p>}
+
         {!isEditing ? (
           <div className="grid grid-cols-2 gap-x-8 gap-y-5">
             <div>
@@ -80,15 +174,11 @@ export default function ProviderProfilePage() {
             </div>
             <div>
               <p className="text-sm text-muted mb-1">Phone number</p>
-              <p className="font-semibold text-foreground">{profile.phone}</p>
+              <p className="font-semibold text-foreground">{profile.phone || "—"}</p>
             </div>
             <div>
               <p className="text-sm text-muted mb-1">Specialty</p>
-              <p className="font-semibold text-foreground">{profile.specialization}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted mb-1">License number</p>
-              <p className="font-semibold text-foreground">{profile.licenseNumber}</p>
+              <p className="font-semibold text-foreground">{profile.specialization || "—"}</p>
             </div>
           </div>
         ) : (
@@ -125,20 +215,13 @@ export default function ProviderProfilePage() {
                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-foreground mb-1.5">License number</label>
-              <input
-                value={profile.licenseNumber}
-                disabled
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-muted"
-              />
-            </div>
             <div className="col-span-2">
               <button
                 onClick={handleSaveProfile}
-                className="bg-primary hover:bg-primary-dark text-white font-semibold px-5 py-2.5 rounded-lg"
+                disabled={saving}
+                className="bg-primary hover:bg-primary-dark text-white font-semibold px-5 py-2.5 rounded-lg disabled:opacity-50"
               >
-                Save Changes
+                {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>
@@ -148,6 +231,10 @@ export default function ProviderProfilePage() {
       {/* Change Password */}
       <div className="bg-card rounded-2xl shadow-sm p-6 mb-6">
         <h2 className="font-bold text-foreground mb-5">Change Password</h2>
+
+        {passwordError && <p className="text-red-600 mb-4">{passwordError}</p>}
+        {passwordSuccess && <p className="text-green-600 mb-4">{passwordSuccess}</p>}
+
         <div className="space-y-4 max-w-sm">
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">Current password</label>
@@ -181,9 +268,10 @@ export default function ProviderProfilePage() {
           </div>
           <button
             onClick={handleUpdatePassword}
-            className="bg-primary hover:bg-primary-dark text-white font-semibold px-5 py-2.5 rounded-lg"
+            disabled={updatingPassword}
+            className="bg-primary hover:bg-primary-dark text-white font-semibold px-5 py-2.5 rounded-lg disabled:opacity-50"
           >
-            Update Password
+            {updatingPassword ? "Updating..." : "Update Password"}
           </button>
         </div>
       </div>
