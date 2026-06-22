@@ -20,8 +20,9 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { method = "GET", body, token } = options;
 
-  const headers: Record<string, string> = {
+   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   };
 
   if (token) {
